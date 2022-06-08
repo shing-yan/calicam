@@ -7,7 +7,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool      live = false;
+bool      live = true;
 //To run live mode, you need a CaliCam from www.astar.ai
 
 int       vfov_bar =  0, width_bar =   0, height_bar =   0;
@@ -194,8 +194,8 @@ void DisparityImage(const cv::Mat& recl, const cv::Mat& recr, cv::Mat& disp) {
     sgbm->compute(recl, recr, disp16s);
   } else {
     cv::Mat grayl, grayr;
-    cv::cvtColor(recl, grayl, CV_BGR2GRAY);
-    cv::cvtColor(recr, grayr, CV_BGR2GRAY);
+    cv::cvtColor(recl, grayl, cv::COLOR_BGR2RGB);
+    cv::cvtColor(recr, grayr, cv::COLOR_BGR2RGB);
 
     cv::Ptr<cv::StereoBM> sbm = cv::StereoBM::create(N, W);
     sbm->setPreFilterCap(31);
@@ -248,16 +248,16 @@ int main(int argc, char** argv) {
   cv::Mat raw_img;
   cv::VideoCapture vcapture;
   if (live) {
-    vcapture.open(0);
+    vcapture.open(3);
 
     if (!vcapture.isOpened()) {
       std::cout << "Camera doesn't work" << std::endl;
       exit(-1);
     }
 
-    vcapture.set(CV_CAP_PROP_FRAME_WIDTH,  cap_cols);
-    vcapture.set(CV_CAP_PROP_FRAME_HEIGHT, cap_rows);
-    vcapture.set(CV_CAP_PROP_FPS, 30);
+    vcapture.set(cv::CAP_PROP_FRAME_WIDTH,  cap_cols);
+    vcapture.set(cv::CAP_PROP_FRAME_HEIGHT, cap_rows);
+    vcapture.set(cv::CAP_PROP_FPS, 30);
   } else {
     raw_img = cv::imread("../dasl_wood_shop.jpg", cv::IMREAD_COLOR);
   }
@@ -282,6 +282,8 @@ int main(int argc, char** argv) {
     cv::createTrackbar("Blk   Size :     3  +  2 *", disp_win_name,
                        &wsize_bar,  wsize_max,  OnTrackWsize);
   }
+
+  int frame_id = 0;
 
   cv::Mat raw_imgl, raw_imgr, rect_imgl, rect_imgr;
   while (1) {
@@ -323,6 +325,11 @@ int main(int argc, char** argv) {
     char key = cv::waitKey(1);
     if (key == 'q' || key == 'Q' || key == 27)
       break;
+
+    if (key == 't') {
+      cv::imwrite(std::to_string(frame_id) + ".png", rect_imgl);
+      frame_id++;
+    }
   }
 
   return 0;
